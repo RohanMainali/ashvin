@@ -3,16 +3,29 @@
 import { Ionicons } from "@expo/vector-icons"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { useTheme } from "@react-navigation/native"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Alert, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View, StatusBar } from "react-native"
 import { LinearGradient } from "expo-linear-gradient"
 import * as Progress from "react-native-progress"
+import { Audio } from "expo-av"
 import { Colors } from "../constants/colors"
 
 const ResultsScreen = ({ route, navigation }) => {
+  // Add safety check for route.params
+  if (!route.params || !route.params.result) {
+    navigation.goBack()
+    return null
+  }
+  
   const { result } = route.params // result now contains scanType, scanData, and llmResponse
   const { colors } = useTheme()
   const [feedbackGiven, setFeedbackGiven] = useState(null) // 'helpful' or 'unhelpful'
+  
+  // Audio playback state for cardiac scans
+  const [audioSound, setAudioSound] = useState(null)
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [playbackPosition, setPlaybackPosition] = useState(0)
+  const [audioDuration, setAudioDuration] = useState(0)
 
   // Extract data from the generic result object
   const { scanType, scanData, llmResponse } = result
@@ -20,6 +33,99 @@ const ResultsScreen = ({ route, navigation }) => {
   const { analysis, confidence, scan_details, insights, summary, topConditions, urgency, suggestions, explanation, message } = llmResponse || {}
   // Fallback for symptom analysis
   const symptomAnalysis = analysis || message || result.analysis || 'No AI analysis available.'
+
+  // Helper function to convert confidence to numeric value
+  const getConfidenceValue = (conf) => {
+    if (typeof conf === 'number' && !isNaN(conf)) {
+      return Math.max(0, Math.min(1, conf)) // Clamp between 0 and 1
+    }
+    if (typeof conf === 'string') {
+      const lower = conf.toLowerCase()
+      switch (lower) {
+        case 'high': return 0.8
+        case 'medium': return 0.6
+        case 'low': return 0.4
+        default:
+          const parsed = parseFloat(conf)
+          return isNaN(parsed) ? 0.5 : Math.max(0, Math.min(1, parsed))
+      }
+    }
+    return 0.5 // Default fallback
+  }
+
+  // Helper function to generate short cardiac assessment
+  const getShortCardiacAssessment = (fullAssessment, riskLevel) => {
+    if (!fullAssessment) return 'Analysis Complete'
+    
+    const assessment = fullAssessment.toLowerCase()
+    
+    // Check for specific conditions and return short phrases
+    if (assessment.includes('irregular') && assessment.includes('rhythm')) {
+      return 'Irregular Rhythm Detected'
+    } else if (assessment.includes('normal') && assessment.includes('heart rate')) {
+      return 'Normal Heart Rate'
+    } else if (assessment.includes('murmur')) {
+      return 'Murmur Detected'
+    } else if (assessment.includes('arrhythmia')) {
+      return 'Arrhythmia Suspected'
+    } else if (assessment.includes('stable')) {
+      return 'Stable Cardiac Function'
+    } else if (riskLevel) {
+      return `${riskLevel} Risk Level`
+    } else {
+      return 'Cardiac Analysis Complete'
+    }
+  }
+
+  // Audio playback functions for cardiac scans
+  const playAudio = async (audioUri) => {
+    try {
+      if (audioSound) {
+        await audioSound.unloadAsync()
+      }
+
+      const { sound } = await Audio.Sound.createAsync(
+        { uri: audioUri },
+        { shouldPlay: true },
+        onPlaybackStatusUpdate
+      )
+      
+      setAudioSound(sound)
+      setIsPlaying(true)
+    } catch (error) {
+      console.error('Error playing audio:', error)
+      Alert.alert('Playback Error', 'Unable to play audio file')
+    }
+  }
+
+  const pauseAudio = async () => {
+    if (audioSound) {
+      await audioSound.pauseAsync()
+      setIsPlaying(false)
+    }
+  }
+
+  const onPlaybackStatusUpdate = (status) => {
+    if (status.isLoaded) {
+      setPlaybackPosition(status.positionMillis)
+      setAudioDuration(status.durationMillis)
+      setIsPlaying(status.isPlaying)
+      
+      if (status.didJustFinish) {
+        setIsPlaying(false)
+        setPlaybackPosition(0)
+      }
+    }
+  }
+
+  // Cleanup audio on unmount
+  useEffect(() => {
+    return () => {
+      if (audioSound) {
+        audioSound.unloadAsync()
+      }
+    }
+  }, [audioSound])
 
   const getUrgencyColor = (urgencyLevel) => {
     switch (urgencyLevel) {
@@ -113,24 +219,34 @@ const ResultsScreen = ({ route, navigation }) => {
     if (scanType === "cardiac") {
       return (
         <View style={styles.visualsContainer}>
-          <View style={[styles.visualItem, { backgroundColor: colors.background }]}>
-            <Text style={[styles.visualTitle, { color: colors.text }]}>Waveform</Text>
-            <Image
-              source={{ uri: scanData.waveformUrl }}
-              style={styles.visualImage}
-              accessibilityLabel={`Waveform for ${scanData.diagnosis}`}
-            />
-            {/* Note: Real-time waveform visualization during recording or detailed interactive playback
-                would require advanced audio processing libraries and potentially native module development. */}
-          </View>
-          <View style={[styles.visualItem, { backgroundColor: colors.background }]}>
-            <Text style={[styles.visualTitle, { color: colors.text }]}>Spectrogram</Text>
-            <Image
-              source={{ uri: scanData.spectrogramUrl }}
-              style={styles.visualImage}
-              accessibilityLabel={`Spectrogram for ${scanData.diagnosis}`}
-            />
-          </View>
+          {scanData.waveformUrl && (
+            <View style={[styles.visualItem, { backgroundColor: colors.background }]}>
+              <Text style={[styles.visualTitle, { color: colors.text }]}>Waveform</Text>
+              <Image
+                source={{ uri: scanData.waveformUrl }}
+                style={styles.visualImage}
+                accessibilityLabel={`Waveform for ${scanData.diagnosis}`}
+              />
+            </View>
+          )}
+          {scanData.spectrogramUrl && (
+            <View style={[styles.visualItem, { backgroundColor: colors.background }]}>
+              <Text style={[styles.visualTitle, { color: colors.text }]}>Spectrogram</Text>
+              <Image
+                source={{ uri: scanData.spectrogramUrl }}
+                style={styles.visualImage}
+                accessibilityLabel={`Spectrogram for ${scanData.diagnosis}`}
+              />
+            </View>
+          )}
+          {!scanData.waveformUrl && !scanData.spectrogramUrl && (
+            <View style={[styles.visualItem, { backgroundColor: colors.background }]}>
+              <Text style={[styles.visualTitle, { color: colors.text }]}>Audio Analysis</Text>
+              <Text style={[styles.visualDescription, { color: colors.text }]}>
+                Audio waveform and spectrogram visualization not available for this analysis.
+              </Text>
+            </View>
+          )}
         </View>
       )
     } else if (scanType === "skin" || scanType === "eye") {
@@ -166,7 +282,7 @@ const ResultsScreen = ({ route, navigation }) => {
               </Text>
             </View>
           )}
-          {scanData.heartRate && (
+          {scanData.heartRate && !isNaN(scanData.heartRate) && (
             <View style={[styles.vitalsItem, { borderColor: colors.borderColorLight }]}> 
               <Ionicons name="pulse-outline" size={24} color={Colors.secondary} />
               <Text style={[styles.vitalsLabel, { color: colors.text }]}>Pulse:</Text>
@@ -265,10 +381,10 @@ const ResultsScreen = ({ route, navigation }) => {
                 <View style={styles.confidenceCard}>
                   <Text style={[styles.confidenceLabel, { color: colors.text }]}>Confidence</Text>
                   <Progress.Circle
-                    progress={Number(llmResponse?.confidence) || 0}
+                    progress={getConfidenceValue(llmResponse?.confidence)}
                     size={80}
                     showsText={true}
-                    formatText={() => `${Math.round((Number(llmResponse?.confidence) || 0) * 100)}%`}
+                    formatText={() => `${Math.round(getConfidenceValue(llmResponse?.confidence) * 100)}%`}
                     color={Colors.primary}
                     unfilledColor={colors.borderColorLight}
                     borderWidth={0}
@@ -287,10 +403,10 @@ const ResultsScreen = ({ route, navigation }) => {
                 <View style={styles.confidenceCard}>
                   <Text style={[styles.confidenceLabel, { color: colors.text }]}>Confidence</Text>
                   <Progress.Circle
-                    progress={Number(confidence) || 0}
+                    progress={getConfidenceValue(confidence)}
                     size={80}
                     showsText={true}
-                    formatText={() => `${Math.round((Number(confidence) || 0) * 100)}%`}
+                    formatText={() => `${Math.round(getConfidenceValue(confidence) * 100)}%`}
                     color={Colors.primary}
                     unfilledColor={colors.borderColorLight}
                     borderWidth={0}
@@ -306,10 +422,10 @@ const ResultsScreen = ({ route, navigation }) => {
                 <View style={styles.confidenceCard}>
                   <Text style={[styles.confidenceLabel, { color: colors.text }]}>Confidence</Text>
                   <Progress.Circle
-                    progress={Number(confidence) || 0}
+                    progress={getConfidenceValue(confidence)}
                     size={60}
                     showsText={true}
-                    formatText={() => `${Math.round((Number(confidence) || 0) * 100)}%`}
+                    formatText={() => `${Math.round(getConfidenceValue(confidence) * 100)}%`}
                     color={Colors.primary}
                     unfilledColor={colors.borderColorLight}
                     borderWidth={0}
@@ -325,14 +441,36 @@ const ResultsScreen = ({ route, navigation }) => {
                 <View style={styles.confidenceCard}>
                   <Text style={[styles.confidenceLabel, { color: colors.text }]}>Confidence</Text>
                   <Progress.Circle
-                    progress={Number(confidence) || 0}
+                    progress={getConfidenceValue(confidence)}
                     size={60}
                     showsText={true}
-                    formatText={() => `${Math.round((Number(confidence) || 0) * 100)}%`}
+                    formatText={() => `${Math.round(getConfidenceValue(confidence) * 100)}%`}
                     color={Colors.primary}
                     unfilledColor={colors.borderColorLight}
                     borderWidth={0}
                     textStyle={{ color: colors.text, fontSize: 16, fontWeight: "bold" }}
+                  />
+                </View>
+              </View>
+            ) : scanType === 'cardiac' ? (
+              <View style={styles.modernSummarySection}>
+                <View style={styles.diagnosisCard}>
+                  <Text style={[styles.diagnosisLabel, { color: colors.text }]}>Cardiac Assessment</Text>
+                  <Text style={[styles.diagnosisValue, { color: colors.text }]}> 
+                    {getShortCardiacAssessment(scanData.assessment || llmResponse?.overallAssessment, scanData.riskLevel)}
+                  </Text>
+                </View>
+                <View style={styles.confidenceCard}>
+                  <Text style={[styles.confidenceLabel, { color: colors.text }]}>Confidence</Text>
+                  <Progress.Circle
+                    progress={getConfidenceValue(confidence)}
+                    size={80}
+                    showsText={true}
+                    formatText={() => `${Math.round(getConfidenceValue(confidence) * 100)}%`}
+                    color={Colors.primary}
+                    unfilledColor={colors.borderColorLight}
+                    borderWidth={0}
+                    textStyle={{ color: colors.text, fontSize: 18, fontWeight: "bold" }}
                   />
                 </View>
               </View>
@@ -352,10 +490,10 @@ const ResultsScreen = ({ route, navigation }) => {
                 <View style={styles.confidenceCard}>
                   <Text style={[styles.confidenceLabel, { color: colors.text }]}>Confidence</Text>
                   <Progress.Circle
-                    progress={confidence}
+                    progress={getConfidenceValue(confidence)}
                     size={80}
                     showsText={true}
-                    formatText={() => `${Math.round(confidence * 100)}%`}
+                    formatText={() => `${Math.round(getConfidenceValue(confidence) * 100)}%`}
                     color={Colors.primary}
                     unfilledColor={colors.borderColorLight}
                     borderWidth={0}
@@ -420,7 +558,63 @@ const ResultsScreen = ({ route, navigation }) => {
                   <Text style={[styles.symptomText, { color: colors.text }]}>"{scanData.symptoms}"</Text>
                 </View>
               </View>
-            ) : (scanType === 'skin' || scanType === 'eye' || scanType === 'cardiac') && scanData?.imageUrl ? (
+            ) : scanType === 'cardiac' ? (
+              <View style={styles.cardiacDetails}>
+                <View style={styles.cardiacAudioSection}>
+                  <View style={styles.audioHeader}>
+                    <Ionicons name="musical-notes-outline" size={30} color={Colors.primary} />
+                    <Text style={[styles.audioLabel, { color: colors.text }]}>Heart Audio Recording</Text>
+                  </View>
+                  
+                  {result.audioUri && (
+                    <View style={styles.audioControls}>
+                      <TouchableOpacity
+                        style={[styles.audioButton, { backgroundColor: Colors.primary }]}
+                        onPress={() => isPlaying ? pauseAudio() : playAudio(result.audioUri)}
+                      >
+                        <Ionicons 
+                          name={isPlaying ? "pause" : "play"} 
+                          size={24} 
+                          color="white" 
+                        />
+                      </TouchableOpacity>
+                      
+                      <View style={styles.audioInfo}>
+                        <Text style={[styles.audioTime, { color: colors.text }]}>
+                          {Math.floor(playbackPosition / 1000)}s / {Math.floor(audioDuration / 1000)}s
+                        </Text>
+                        <View style={styles.progressBar}>
+                          <View 
+                            style={[
+                              styles.progressFill, 
+                              { 
+                                width: audioDuration > 0 ? `${(playbackPosition / audioDuration) * 100}%` : '0%',
+                                backgroundColor: Colors.primary 
+                              }
+                            ]} 
+                          />
+                        </View>
+                      </View>
+                    </View>
+                  )}
+                  
+                  <View style={styles.audioMetadata}>
+                    <View style={styles.metadataItem}>
+                      <Text style={[styles.metadataLabel, { color: colors.text }]}>Duration:</Text>
+                      <Text style={[styles.metadataValue, { color: colors.text }]}>
+                        {scanData.duration ? `${Math.round(scanData.duration)}s` : 'Unknown'}
+                      </Text>
+                    </View>
+                    <View style={styles.metadataItem}>
+                      <Text style={[styles.metadataLabel, { color: colors.text }]}>Quality:</Text>
+                      <Text style={[styles.metadataValue, { color: colors.text }]}>
+                        {scanData.audioQuality || 'Unknown'}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            ) : (scanType === 'skin' || scanType === 'eye') && scanData?.imageUrl ? (
               <View style={styles.imageSection}>
                 <View style={styles.imageContainer}>
                   <Text style={[styles.imageLabel, { color: colors.text }]}>Captured Image</Text>
@@ -491,6 +685,65 @@ const ResultsScreen = ({ route, navigation }) => {
                   <Text style={[styles.insightText, { color: colors.text }]}>
                     {llmResponse?.insights || 'Consult healthcare provider for personalized advice.'}
                   </Text>
+                </View>
+              </View>
+            ) : scanType === 'cardiac' ? (
+              <View style={styles.insightsContent}>
+                <View style={styles.insightSection}>
+                  <Text style={[styles.insightTitle, { color: colors.text }]}>Heart Rate Analysis</Text>
+                  <Text style={[styles.insightText, { color: colors.text }]}>
+                    {scanData.heartRate ? `Heart Rate: ${scanData.heartRate} BPM` : 'Heart rate data not available'}
+                  </Text>
+                  <Text style={[styles.insightText, { color: colors.text }]}>
+                    {llmResponse?.heartRateAnalysis || 'No heart rate analysis available.'}
+                  </Text>
+                </View>
+                
+                <View style={styles.insightSection}>
+                  <Text style={[styles.insightTitle, { color: colors.text }]}>Rhythm Analysis</Text>
+                  <Text style={[styles.insightText, { color: colors.text }]}>
+                    {scanData.rhythmAnalysis || llmResponse?.rhythmAnalysis || 'No rhythm analysis available.'}
+                  </Text>
+                </View>
+
+                <View style={styles.insightSection}>
+                  <Text style={[styles.insightTitle, { color: colors.text }]}>Risk Assessment</Text>
+                  <Text style={[styles.insightText, { color: colors.text }]}>
+                    Risk Level: {scanData.riskLevel || 'Not specified'}
+                  </Text>
+                </View>
+
+                <View style={styles.insightSection}>
+                  <Text style={[styles.insightTitle, { color: colors.text }]}>Medical Attention</Text>
+                  <Text style={[styles.insightText, { color: colors.text }]}>
+                    {scanData.seekMedicalAttention || llmResponse?.seekMedicalAttention || 'No specific guidance provided.'}
+                  </Text>
+                </View>
+
+                <View style={styles.insightSection}>
+                  <Text style={[styles.insightTitle, { color: colors.text }]}>Recommendations</Text>
+                  {scanData.recommendations && Array.isArray(scanData.recommendations) ? (
+                    scanData.recommendations.map((rec, index) => (
+                      <Text key={index} style={[styles.conditionItem, { color: colors.text }]}>• {rec}</Text>
+                    ))
+                  ) : (
+                    <Text style={[styles.insightText, { color: colors.text }]}>
+                      {scanData.recommendations || 'No specific recommendations provided.'}
+                    </Text>
+                  )}
+                </View>
+
+                <View style={styles.insightSection}>
+                  <Text style={[styles.insightTitle, { color: colors.text }]}>Lifestyle Suggestions</Text>
+                  {scanData.lifestyleSuggestions && Array.isArray(scanData.lifestyleSuggestions) ? (
+                    scanData.lifestyleSuggestions.map((suggestion, index) => (
+                      <Text key={index} style={[styles.conditionItem, { color: colors.text }]}>• {suggestion}</Text>
+                    ))
+                  ) : (
+                    <Text style={[styles.insightText, { color: colors.text }]}>
+                      {scanData.lifestyleSuggestions || 'No lifestyle suggestions provided.'}
+                    </Text>
+                  )}
                 </View>
               </View>
             ) : (
@@ -624,22 +877,6 @@ const ResultsScreen = ({ route, navigation }) => {
                 <Text style={styles.actionButtonText}>Find Doctor</Text>
               </LinearGradient>
             </TouchableOpacity>
-
-            {scanType === "cardiac" && (
-              <TouchableOpacity
-                style={styles.modernActionButton}
-                onPress={() => navigation.navigate("MainApp", { screen: "Compare", params: { currentResult: result } })}
-                accessibilityLabel="Compare this result"
-              >
-                <LinearGradient
-                  colors={[Colors.accentGreen, '#4CAF50']}
-                  style={styles.actionButtonGradient}
-                >
-                  <Ionicons name="git-compare" size={20} color={Colors.textLight} />
-                  <Text style={styles.actionButtonText}>Compare</Text>
-                </LinearGradient>
-              </TouchableOpacity>
-            )}
 
             <TouchableOpacity
               style={styles.modernActionButton}
@@ -868,6 +1105,72 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontStyle: 'italic',
     lineHeight: 24,
+  },
+  cardiacDetails: {
+    alignItems: 'center',
+  },
+  cardiacAudioSection: {
+    width: '100%',
+    padding: 20,
+    backgroundColor: 'rgba(109, 40, 217, 0.05)',
+    borderRadius: 16,
+  },
+  audioHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  audioLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 12,
+  },
+  audioControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  audioButton: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  audioInfo: {
+    flex: 1,
+  },
+  audioTime: {
+    fontSize: 14,
+    marginBottom: 8,
+  },
+  progressBar: {
+    height: 4,
+    backgroundColor: 'rgba(109, 40, 217, 0.2)',
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 2,
+  },
+  audioMetadata: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  metadataItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  metadataLabel: {
+    fontSize: 12,
+    opacity: 0.7,
+    marginBottom: 4,
+  },
+  metadataValue: {
+    fontSize: 14,
+    fontWeight: '600',
   },
   insightsHeader: {
     flexDirection: 'row',

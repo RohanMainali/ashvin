@@ -266,10 +266,12 @@ const CardiacScanScreen = ({ navigation, addHistoryEntry, isDarkMode }) => {
       addHistoryEntry(historyEntry)
       
       // Navigate to results with AI analysis
-      navigation.navigate("Results", {
-        type: "cardiac",
-        data: {
-          heartRate: result.audioFeatures.estimatedBPM,
+      const resultForNavigation = {
+        id: Date.now().toString(),
+        date: new Date().toISOString(),
+        scanType: "cardiac",
+        scanData: {
+          heartRate: isNaN(result.audioFeatures.estimatedBPM) ? null : result.audioFeatures.estimatedBPM,
           riskLevel: result.aiAnalysis.riskLevel,
           assessment: result.aiAnalysis.overallAssessment,
           rhythmAnalysis: result.aiAnalysis.rhythmAnalysis,
@@ -277,18 +279,33 @@ const CardiacScanScreen = ({ navigation, addHistoryEntry, isDarkMode }) => {
           seekMedicalAttention: result.aiAnalysis.seekMedicalAttention,
           lifestyleSuggestions: result.aiAnalysis.lifestyleSuggestions,
           confidence: result.aiAnalysis.confidence,
-          duration: result.audioFeatures.duration,
-          audioQuality: result.audioFeatures.audioQuality
+          duration: isNaN(result.audioFeatures.duration) ? null : result.audioFeatures.duration,
+          audioQuality: result.audioFeatures.audioQuality,
+          diagnosis: result.aiAnalysis.overallAssessment || "Cardiac Analysis",
+          waveformUrl: null, // Audio waveform visualization not available
+          spectrogramUrl: null // Audio spectrogram visualization not available
         },
-        aiAnalysis: result
-      })
+        audioUri: recordedUri, // Add audio URI for playback
+        llmResponse: result.aiAnalysis
+      }
+      
+      navigation.navigate("Results", { result: resultForNavigation })
       
     } catch (error) {
       console.error('AI Cardiac analysis error:', error)
-      Alert.alert(
-        "Analysis Error", 
-        `AI analysis failed: ${error.message}\n\nPlease ensure you have a clear heartbeat recording and try again.`
-      )
+      
+      // Check if it's a speech detection error
+      if (error.message.includes('Speech detected:')) {
+        Alert.alert(
+          "Invalid Audio Recording", 
+          error.message + "\n\nPlease record only your heartbeat sounds without speaking or making noise."
+        )
+      } else {
+        Alert.alert(
+          "Analysis Error", 
+          `AI analysis failed: ${error.message}\n\nPlease ensure you have a clear heartbeat recording and try again.`
+        )
+      }
     } finally {
       setIsAnalyzing(false)
       setIsLoading(false)

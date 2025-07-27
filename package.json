@@ -51,6 +51,7 @@
     "embla-carousel-react": "8.5.1",
     "expo": "latest",
     "expo-av": "latest",
+    "expo-document-picker": "~13.1.6",
     "expo-font": "latest",
     "expo-image-picker": "latest",
     "expo-linear-gradient": "latest",
