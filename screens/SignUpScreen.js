@@ -6,7 +6,6 @@ import { useState } from "react"
 import {
     ActivityIndicator,
     Alert,
-    Image,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
@@ -15,20 +14,25 @@ import {
     TextInput,
     TouchableOpacity,
     View,
+    StatusBar,
+    Dimensions,
 } from "react-native"
 
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { Colors } from "../constants/colors"
 import { signup as signupApi } from "../utils/api"
 
+const { width, height } = Dimensions.get("window")
+
 const SignUpScreen = ({ navigation, setLoggedIn }) => {
+  const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
 
   const handleSignUp = async () => {
-    if (!email || !password || !confirmPassword) {
+    if (!name || !email || !password || !confirmPassword) {
       Alert.alert("Sign Up Error", "Please fill in all fields.")
       return
     }
@@ -43,11 +47,11 @@ const SignUpScreen = ({ navigation, setLoggedIn }) => {
 
     setIsLoading(true)
     try {
-      const response = await signupApi("New Animus User", email, password)
+      const response = await signupApi(name, email, password)
       console.log('Signup response:', response)
       if (response.message && response.message.includes("successfully")) {
         await AsyncStorage.setItem("loggedIn", "true")
-        await AsyncStorage.setItem("userName", "New Animus User")
+        await AsyncStorage.setItem("userName", name)
         await AsyncStorage.setItem("userEmail", email)
         setLoggedIn(true)
         Alert.alert("Success", "Account created successfully! You are now logged in.")
@@ -66,78 +70,160 @@ const SignUpScreen = ({ navigation, setLoggedIn }) => {
   }
 
   return (
-    <LinearGradient colors={[Colors.primary, Colors.gradientEnd]} style={styles.container}>
+    <LinearGradient colors={['#667eea', '#764ba2']} style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+      
       <KeyboardAvoidingView style={styles.keyboardAvoidingView} behavior={Platform.OS === "ios" ? "padding" : "height"}>
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          <Image
-            source={{ uri: "/placeholder.svg?height=120&width=120" }}
-            style={styles.logo}
-            accessibilityLabel="Animus app logo"
-          />
-          <Text style={styles.title}>Join Animus</Text>
-          <Text style={styles.subtitle}>Create your account to start monitoring your heart health.</Text>
+        
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Ionicons name="chevron-back" size={24} color="white" />
+          </TouchableOpacity>
+          <View style={styles.logoContainer}>
+            <LinearGradient
+              colors={[Colors.primary, Colors.secondary]}
+              style={styles.logoGradient}
+            >
+              <Ionicons name="heart" size={32} color="white" />
+            </LinearGradient>
+          </View>
+          <View style={styles.placeholder} />
+        </View>
 
-          <View style={styles.inputGroup}>
-            <View style={styles.inputContainer}>
-              <Ionicons name="mail-outline" size={20} color={Colors.primary} style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Email"
-                placeholderTextColor={Colors.textDark + "80"}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                value={email}
-                onChangeText={setEmail}
-                editable={!isLoading}
-              />
-            </View>
-            <View style={styles.inputContainer}>
-              <Ionicons name="lock-closed-outline" size={20} color={Colors.primary} style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Password"
-                placeholderTextColor={Colors.textDark + "80"}
-                secureTextEntry
-                value={password}
-                onChangeText={setPassword}
-                editable={!isLoading}
-              />
-            </View>
-            <View style={styles.inputContainer}>
-              <Ionicons name="lock-closed-outline" size={20} color={Colors.primary} style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Confirm Password"
-                placeholderTextColor={Colors.textDark + "80"}
-                secureTextEntry
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                editable={!isLoading}
-              />
-            </View>
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          
+          {/* Welcome Section */}
+          <View style={styles.welcomeSection}>
+            <Text style={styles.title}>Create Account</Text>
+            <Text style={styles.subtitle}>Join Animus and start your health journey</Text>
           </View>
 
-          <TouchableOpacity
-            style={styles.signupButton}
-            onPress={handleSignUp}
-            disabled={isLoading}
-            accessibilityLabel="Sign up"
-          >
-            {isLoading ? (
-              <ActivityIndicator color={Colors.textLight} />
-            ) : (
-              <Text style={styles.signupButtonText}>Sign Up</Text>
-            )}
-          </TouchableOpacity>
+          {/* Sign Up Form */}
+          <View style={styles.formContainer}>
+            <View style={styles.inputGroup}>
+              <View style={styles.inputContainer}>
+                <LinearGradient
+                  colors={['rgba(255,255,255,0.1)', 'rgba(255,255,255,0.05)']}
+                  style={styles.inputGradient}
+                >
+                  <Ionicons name="person-outline" size={20} color="rgba(255,255,255,0.7)" style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Full Name"
+                    placeholderTextColor="rgba(255,255,255,0.7)"
+                    autoCapitalize="words"
+                    value={name}
+                    onChangeText={setName}
+                    editable={!isLoading}
+                  />
+                </LinearGradient>
+              </View>
 
-          <View style={styles.loginContainer}>
-            <Text style={styles.loginText}>Already have an account?</Text>
+              <View style={styles.inputContainer}>
+                <LinearGradient
+                  colors={['rgba(255,255,255,0.1)', 'rgba(255,255,255,0.05)']}
+                  style={styles.inputGradient}
+                >
+                  <Ionicons name="mail-outline" size={20} color="rgba(255,255,255,0.7)" style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Email Address"
+                    placeholderTextColor="rgba(255,255,255,0.7)"
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    value={email}
+                    onChangeText={setEmail}
+                    editable={!isLoading}
+                  />
+                </LinearGradient>
+              </View>
+              
+              <View style={styles.inputContainer}>
+                <LinearGradient
+                  colors={['rgba(255,255,255,0.1)', 'rgba(255,255,255,0.05)']}
+                  style={styles.inputGradient}
+                >
+                  <Ionicons name="lock-closed-outline" size={20} color="rgba(255,255,255,0.7)" style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Password"
+                    placeholderTextColor="rgba(255,255,255,0.7)"
+                    secureTextEntry
+                    value={password}
+                    onChangeText={setPassword}
+                    editable={!isLoading}
+                  />
+                </LinearGradient>
+              </View>
+
+              <View style={styles.inputContainer}>
+                <LinearGradient
+                  colors={['rgba(255,255,255,0.1)', 'rgba(255,255,255,0.05)']}
+                  style={styles.inputGradient}
+                >
+                  <Ionicons name="lock-closed-outline" size={20} color="rgba(255,255,255,0.7)" style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Confirm Password"
+                    placeholderTextColor="rgba(255,255,255,0.7)"
+                    secureTextEntry
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
+                    editable={!isLoading}
+                  />
+                </LinearGradient>
+              </View>
+            </View>
+
+            {/* Terms and Conditions */}
+            <View style={styles.termsContainer}>
+              <Text style={styles.termsText}>
+                By creating an account, you agree to our{' '}
+                <Text style={styles.termsLink}>Terms of Service</Text>
+                {' '}and{' '}
+                <Text style={styles.termsLink}>Privacy Policy</Text>
+              </Text>
+            </View>
+
             <TouchableOpacity
-              onPress={() => navigation.navigate("Login")}
+              style={styles.signupButton}
+              onPress={handleSignUp}
               disabled={isLoading}
-              accessibilityLabel="Log in"
+              accessibilityLabel="Create Account"
             >
-              <Text style={styles.loginButtonText}>Log In</Text>
+              <LinearGradient
+                colors={[Colors.primary, Colors.secondary]}
+                style={styles.signupButtonGradient}
+              >
+                {isLoading ? (
+                  <ActivityIndicator size="small" color="white" />
+                ) : (
+                  <>
+                    <Text style={styles.signupButtonText}>Create Account</Text>
+                    <Ionicons name="arrow-forward" size={20} color="white" />
+                  </>
+                )}
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+
+          {/* Divider */}
+          <View style={styles.dividerContainer}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>OR</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+
+          {/* Sign in link */}
+          <View style={styles.loginContainer}>
+            <Text style={styles.loginText}>Already have an account? </Text>
+            <TouchableOpacity onPress={() => navigation.navigate("Login")} disabled={isLoading}>
+              <Text style={styles.loginButtonText}>Sign In</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -149,96 +235,179 @@ const SignUpScreen = ({ navigation, setLoggedIn }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
   },
   keyboardAvoidingView: {
     flex: 1,
-    width: "100%",
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 60,
+    paddingBottom: 20,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  logoContainer: {
+    alignItems: 'center',
+  },
+  logoGradient: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  placeholder: {
+    width: 40,
   },
   scrollContent: {
     flexGrow: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
+    paddingHorizontal: 30,
   },
-  logo: {
-    width: 120,
-    height: 120,
-    marginBottom: 30,
-    tintColor: Colors.textLight,
-  },
-  title: {
-    fontSize: 36,
-    fontWeight: "bold",
-    color: Colors.textLight,
-    marginBottom: 10,
-  },
-  subtitle: {
-    fontSize: 18,
-    color: Colors.textLight,
-    textAlign: "center",
-    opacity: 0.9,
+  welcomeSection: {
+    alignItems: 'center',
     marginBottom: 40,
   },
-  inputGroup: {
-    width: "100%",
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: 'white',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: 'rgba(255,255,255,0.8)',
+    textAlign: 'center',
+  },
+  formContainer: {
     marginBottom: 30,
   },
+  inputGroup: {
+    marginBottom: 20,
+  },
   inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: Colors.cardBackgroundLight,
-    borderRadius: 15,
-    paddingHorizontal: 15,
-    marginBottom: 15,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    marginBottom: 16,
+  },
+  inputGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderRadius: 25,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
   },
   inputIcon: {
-    marginRight: 10,
+    marginRight: 12,
   },
   input: {
     flex: 1,
-    height: 55,
     fontSize: 16,
-    color: Colors.textDark,
+    color: 'white',
   },
-  signupButton: {
-    backgroundColor: Colors.textLight,
-    paddingVertical: 18,
-    borderRadius: 30,
-    width: "100%",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 10,
+  termsContainer: {
     marginBottom: 20,
   },
+  termsText: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  termsLink: {
+    color: 'white',
+    fontWeight: '600',
+  },
+  signupButton: {
+    borderRadius: 25,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  signupButtonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+  },
   signupButtonText: {
-    color: Colors.primary,
-    fontSize: 20,
-    fontWeight: "bold",
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginRight: 8,
+  },
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 30,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+  },
+  dividerText: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 14,
+    marginHorizontal: 20,
+  },
+  socialContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 30,
+  },
+  socialButton: {
+    flex: 1,
+    marginHorizontal: 8,
+    borderRadius: 25,
+    overflow: 'hidden',
+  },
+  socialButtonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  socialButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
   },
   loginContainer: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingBottom: 30,
   },
   loginText: {
-    color: Colors.textLight,
+    color: 'rgba(255,255,255,0.8)',
     fontSize: 16,
-    marginRight: 5,
   },
   loginButtonText: {
-    color: Colors.textLight,
+    color: 'white',
     fontSize: 16,
-    fontWeight: "bold",
-    textDecorationLine: "underline",
+    fontWeight: 'bold',
   },
 })
 
