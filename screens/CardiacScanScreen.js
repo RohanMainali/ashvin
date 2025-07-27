@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTheme } from "@react-navigation/native";
 import { Audio } from "expo-av";
-import * as ImagePicker from "expo-image-picker";
+import * as DocumentPicker from "expo-document-picker";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -20,7 +20,7 @@ import {
     StatusBar,
 } from "react-native";
 import { Colors } from "../constants/colors";
-import { analyzeHeartbeat } from "../utils/mockApi";
+import { analyzeCardiacAudio, saveCardiacAnalysis } from "../utils/cardiacAnalysisApi";
 
 const CardiacScanScreen = ({ navigation, addHistoryEntry, isDarkMode }) => {
   const { colors } = useTheme()
@@ -30,6 +30,8 @@ const CardiacScanScreen = ({ navigation, addHistoryEntry, isDarkMode }) => {
   const [playbackObject, setPlaybackObject] = useState(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [analysisResult, setAnalysisResult] = useState(null)
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
 
   const pulseAnim = useRef(new Animated.Value(1)).current
   const recordingTimer = useRef(null)
@@ -162,23 +164,28 @@ const CardiacScanScreen = ({ navigation, addHistoryEntry, isDarkMode }) => {
   }
 
   const pickAudioFile = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Audio,
-      allowsEditing: false,
-      quality: 1,
-    })
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ['audio/*'],
+        copyToCacheDirectory: false,
+      })
 
-    if (!result.canceled) {
-      setRecordedUri(result.assets[0].uri)
-      setIsRecording(false)
-      if (recording) {
-        await recording.stopAndUnloadAsync()
-        setRecording(null)
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const selectedFile = result.assets[0]
+        setRecordedUri(selectedFile.uri)
+        setIsRecording(false)
+        if (recording) {
+          await recording.stopAndUnloadAsync()
+          setRecording(null)
+        }
+        if (playbackObject) {
+          playbackObject.unloadAsync()
+          setPlaybackObject(null)
+        }
       }
-      if (playbackObject) {
-        playbackObject.unloadAsync()
-        setPlaybackObject(null)
-      }
+    } catch (error) {
+      console.error('Error picking audio file:', error)
+      Alert.alert('Error', 'Failed to pick audio file')
     }
   }
 
@@ -221,32 +228,69 @@ const CardiacScanScreen = ({ navigation, addHistoryEntry, isDarkMode }) => {
       return
     }
 
+    setIsAnalyzing(true)
     setIsLoading(true)
+    
     try {
-      const result = await analyzeHeartbeat(recordedUri)
+      console.log('Starting AI cardiac analysis...')
       
-      if (result.success) {
-        await updateScanMetrics()
-        
-        const historyEntry = {
-          type: "cardiac",
-          result: result.data,
-          timestamp: new Date().toISOString(),
-          audioUri: recordedUri,
-        }
-        
-        addHistoryEntry(historyEntry)
-        
-        navigation.navigate("Results", {
-          type: "cardiac",
-          data: result.data,
-        })
-      } else {
-        Alert.alert("Analysis Failed", result.error || "Could not analyze the audio. Please try again.")
+      // Use AI-powered cardiac analysis
+      const result = await analyzeCardiacAudio(recordedUri)
+      
+      console.log('AI Analysis completed:', result)
+      
+      // Save analysis locally
+      await saveCardiacAnalysis(result)
+      
+      // Update metrics
+      await updateScanMetrics()
+      
+      // Set analysis result for display
+      setAnalysisResult(result)
+      
+      // Create history entry
+      const historyEntry = {
+        type: "cardiac",
+        result: {
+          heartRate: result.audioFeatures.estimatedBPM,
+          riskLevel: result.aiAnalysis.riskLevel,
+          assessment: result.aiAnalysis.overallAssessment,
+          recommendations: result.aiAnalysis.recommendations,
+          confidence: result.aiAnalysis.confidence
+        },
+        timestamp: new Date().toISOString(),
+        audioUri: recordedUri,
+        analysisId: result.analysisId
       }
+      
+      addHistoryEntry(historyEntry)
+      
+      // Navigate to results with AI analysis
+      navigation.navigate("Results", {
+        type: "cardiac",
+        data: {
+          heartRate: result.audioFeatures.estimatedBPM,
+          riskLevel: result.aiAnalysis.riskLevel,
+          assessment: result.aiAnalysis.overallAssessment,
+          rhythmAnalysis: result.aiAnalysis.rhythmAnalysis,
+          recommendations: result.aiAnalysis.recommendations,
+          seekMedicalAttention: result.aiAnalysis.seekMedicalAttention,
+          lifestyleSuggestions: result.aiAnalysis.lifestyleSuggestions,
+          confidence: result.aiAnalysis.confidence,
+          duration: result.audioFeatures.duration,
+          audioQuality: result.audioFeatures.audioQuality
+        },
+        aiAnalysis: result
+      })
+      
     } catch (error) {
-      Alert.alert("Analysis Error", "An error occurred during analysis. Please try again.")
+      console.error('AI Cardiac analysis error:', error)
+      Alert.alert(
+        "Analysis Error", 
+        `AI analysis failed: ${error.message}\n\nPlease ensure you have a clear heartbeat recording and try again.`
+      )
     } finally {
+      setIsAnalyzing(false)
       setIsLoading(false)
     }
   }
@@ -458,13 +502,13 @@ const CardiacScanScreen = ({ navigation, addHistoryEntry, isDarkMode }) => {
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
             >
-              {isLoading ? (
+              {isLoading || isAnalyzing ? (
                 <ActivityIndicator size="small" color={Colors.textLight} />
               ) : (
                 <Ionicons name="analytics" size={24} color={Colors.textLight} />
               )}
               <Text style={styles.analyzeButtonText}>
-                {isLoading ? "Analyzing..." : "Analyze Heartbeat"}
+                {isAnalyzing ? "🚀 Turboline AI Analyzing..." : isLoading ? "Processing..." : "🤖 Turboline AI Analysis"}
               </Text>
             </LinearGradient>
           </TouchableOpacity>

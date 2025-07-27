@@ -32,6 +32,10 @@ export async function getReminders(token) {
 
 export async function createReminder(token, data) {
   try {
+    console.log('API: Creating reminder with data:', data)
+    console.log('API: Using token:', token ? 'Token present' : 'No token')
+    console.log('API: BASE_URL:', BASE_URL)
+    
     const res = await fetch(`${BASE_URL}/reminders`, {
       method: 'POST',
       headers: {
@@ -40,9 +44,30 @@ export async function createReminder(token, data) {
       },
       body: JSON.stringify(data),
     });
-    return await res.json();
+    
+    console.log('API: Response status:', res.status)
+    console.log('API: Response status text:', res.statusText)
+    
+    const responseData = await res.json();
+    console.log('API: Response data:', responseData)
+    
+    if (!res.ok) {
+      console.error('API: Request failed with status:', res.status)
+      return { 
+        success: false, 
+        message: responseData.message || `Request failed with status ${res.status}`,
+        error: responseData.error || res.statusText
+      }
+    }
+    
+    return responseData;
   } catch (error) {
-    return { message: 'Network request failed', error: error?.message || error };
+    console.error('API: Network error:', error)
+    return { 
+      success: false, 
+      message: 'Network request failed', 
+      error: error?.message || error 
+    };
   }
 }
 
