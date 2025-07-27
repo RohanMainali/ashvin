@@ -839,7 +839,7 @@ const ResultsScreen = ({ route, navigation }) => {
                 if (topic && typeof topic === 'string') topic = topic.replace(/\.$/, '')
                 navigation.navigate("MainApp", { screen: "Chat", params: { initialPrompt: `Tell me more about: ${topic}` } })
               }}
-              accessibilityLabel="Ask Ashvin about diagnosis"
+              accessibilityLabel="Ask Animus about diagnosis"
             >
               <LinearGradient
                 colors={[Colors.primary, Colors.secondary]}
@@ -877,6 +877,22 @@ const ResultsScreen = ({ route, navigation }) => {
                 <Text style={styles.actionButtonText}>Find Doctor</Text>
               </LinearGradient>
             </TouchableOpacity>
+
+            {scanType === "cardiac" && (
+              <TouchableOpacity
+                style={styles.modernActionButton}
+                onPress={() => navigation.navigate("MainApp", { screen: "Compare", params: { currentResult: result } })}
+                accessibilityLabel="Compare this result"
+              >
+                <LinearGradient
+                  colors={[Colors.accentGreen, '#4CAF50']}
+                  style={styles.actionButtonGradient}
+                >
+                  <Ionicons name="git-compare" size={20} color={Colors.textLight} />
+                  <Text style={styles.actionButtonText}>Compare</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            )}
 
             <TouchableOpacity
               style={styles.modernActionButton}
@@ -1105,72 +1121,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontStyle: 'italic',
     lineHeight: 24,
-  },
-  cardiacDetails: {
-    alignItems: 'center',
-  },
-  cardiacAudioSection: {
-    width: '100%',
-    padding: 20,
-    backgroundColor: 'rgba(109, 40, 217, 0.05)',
-    borderRadius: 16,
-  },
-  audioHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  audioLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 12,
-  },
-  audioControls: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  audioButton: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  audioInfo: {
-    flex: 1,
-  },
-  audioTime: {
-    fontSize: 14,
-    marginBottom: 8,
-  },
-  progressBar: {
-    height: 4,
-    backgroundColor: 'rgba(109, 40, 217, 0.2)',
-    borderRadius: 2,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    borderRadius: 2,
-  },
-  audioMetadata: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  metadataItem: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  metadataLabel: {
-    fontSize: 12,
-    opacity: 0.7,
-    marginBottom: 4,
-  },
-  metadataValue: {
-    fontSize: 14,
-    fontWeight: '600',
   },
   insightsHeader: {
     flexDirection: 'row',

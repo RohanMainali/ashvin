@@ -293,19 +293,10 @@ const CardiacScanScreen = ({ navigation, addHistoryEntry, isDarkMode }) => {
       
     } catch (error) {
       console.error('AI Cardiac analysis error:', error)
-      
-      // Check if it's a speech detection error
-      if (error.message.includes('Speech detected:')) {
-        Alert.alert(
-          "Invalid Audio Recording", 
-          error.message + "\n\nPlease record only your heartbeat sounds without speaking or making noise."
-        )
-      } else {
-        Alert.alert(
-          "Analysis Error", 
-          `AI analysis failed: ${error.message}\n\nPlease ensure you have a clear heartbeat recording and try again.`
-        )
-      }
+      Alert.alert(
+        "Analysis Error", 
+        `AI analysis failed: ${error.message}\n\nPlease ensure you have a clear heartbeat recording and try again.`
+      )
     } finally {
       setIsAnalyzing(false)
       setIsLoading(false)
@@ -525,7 +516,7 @@ const CardiacScanScreen = ({ navigation, addHistoryEntry, isDarkMode }) => {
                 <Ionicons name="analytics" size={24} color={Colors.textLight} />
               )}
               <Text style={styles.analyzeButtonText}>
-                {isAnalyzing ? "🚀 Analyzing..." : isLoading ? "Processing..." : "Analyze"}
+                {isAnalyzing ? "Analyzing..." : isLoading ? "Processing..." : "Analyze "}
               </Text>
             </LinearGradient>
           </TouchableOpacity>

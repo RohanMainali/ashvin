@@ -1,6 +1,5 @@
 import { Audio } from 'expo-av';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { transcribeAudioFile } from './speechToText';
 
 // Turboline AI Configuration (matching your backend pattern)
 const TURBOLINE_URL = 'https://api.turboline.ai/coreai/deployments/gpt-4.1/chat/completions?api-version=2025-01-01-preview';
@@ -8,66 +7,6 @@ const TURBOLINE_KEY = 'a7ecc401f1be4d08a79256618c3977b0';
 
 // For testing without Turboline API, set this to true
 const USE_MOCK_AI = false;
-
-/**
- * Validate that the audio is actually a heartbeat sound and not speech
- * Uses speech-to-text transcription to detect words
- */
-export const validateHeartbeatAudio = async (audioUri) => {
-  try {
-    console.log('Validating audio for heartbeat sounds...');
-    
-    // Transcribe the audio to detect if any words are spoken
-    const transcript = await transcribeAudioFile(audioUri);
-    
-    // Clean up the transcript and check for meaningful words
-    const cleanTranscript = transcript?.trim().toLowerCase();
-    
-    console.log('Audio transcript:', cleanTranscript);
-    
-    // If transcript is empty, null, or contains only noise/non-words, it's likely a heartbeat
-    if (!cleanTranscript || cleanTranscript.length === 0) {
-      return { isValid: true, reason: 'No speech detected' };
-    }
-    
-    // Check for common non-speech sounds that might be transcribed
-    const nonSpeechPatterns = [
-      /^[.,:;!?\s-]+$/, // Only punctuation and whitespace
-      /^(uh|um|ah|oh|hmm|mm|hm)+[.,:;!?\s]*$/i, // Common filler sounds
-      /^[a-z]$/, // Single letter (often transcription error)
-      /^[a-z]{1,2}[.,:;!?\s]*$/i, // Very short fragments
-    ];
-    
-    // Check if transcript matches non-speech patterns
-    for (const pattern of nonSpeechPatterns) {
-      if (pattern.test(cleanTranscript)) {
-        return { isValid: true, reason: 'Non-speech sounds detected' };
-      }
-    }
-    
-    // If we detect actual words/sentences, reject the audio
-    const wordCount = cleanTranscript.split(/\s+/).filter(word => word.length > 2).length;
-    
-    if (wordCount > 0) {
-      return { 
-        isValid: false, 
-        reason: `Speech detected: "${cleanTranscript}". Please record only heartbeat sounds without speaking.`,
-        transcript: cleanTranscript
-      };
-    }
-    
-    return { isValid: true, reason: 'Audio validation passed' };
-    
-  } catch (error) {
-    console.error('Audio validation error:', error);
-    // If transcription fails, we'll allow the audio through with a warning
-    return { 
-      isValid: true, 
-      reason: 'Validation service unavailable - proceeding with analysis',
-      warning: true 
-    };
-  }
-};
 
 /**
  * Analyze heartbeat audio features locally
@@ -328,29 +267,16 @@ export const analyzeCardiacAudio = async (audioUri) => {
   try {
     console.log('Starting Turboline AI cardiac audio analysis...');
     
-    // Step 1: Validate audio is heartbeat sound (not speech)
-    console.log('Validating audio for heartbeat sounds...');
-    const validation = await validateHeartbeatAudio(audioUri);
-    console.log('Audio validation result:', validation);
-    
-    if (!validation.isValid) {
-      throw new Error(validation.reason);
-    }
-    
-    if (validation.warning) {
-      console.warn('Audio validation warning:', validation.reason);
-    }
-    
-    // Step 2: Extract audio features
+    // Step 1: Extract audio features
     const features = await extractHeartbeatFeatures(audioUri);
     console.log('Audio features extracted:', features);
     
-    // Step 3: Get Turboline AI analysis
+    // Step 2: Get Turboline AI analysis
     console.log('Requesting Turboline AI analysis...');
     const aiAnalysis = await getCardiacAIAnalysis(features);
     console.log('Turboline AI analysis completed:', aiAnalysis);
     
-    // Step 4: Combine results with metadata
+    // Step 3: Combine results with metadata
     const completeAnalysis = {
       audioFeatures: features,
       aiAnalysis: aiAnalysis,
@@ -358,8 +284,7 @@ export const analyzeCardiacAudio = async (audioUri) => {
       timestamp: new Date().toISOString(),
       audioUri: audioUri,
       aiProvider: 'Turboline',
-      version: '1.0',
-      audioValidation: validation // Include validation result
+      version: '1.0'
     };
     
     console.log('Complete cardiac analysis ready:', completeAnalysis);
