@@ -839,7 +839,7 @@ const ResultsScreen = ({ route, navigation }) => {
                 if (topic && typeof topic === 'string') topic = topic.replace(/\.$/, '')
                 navigation.navigate("MainApp", { screen: "Chat", params: { initialPrompt: `Tell me more about: ${topic}` } })
               }}
-              accessibilityLabel="Ask Animus about diagnosis"
+              accessibilityLabel="Ask Ashvin about diagnosis"
             >
               <LinearGradient
                 colors={[Colors.primary, Colors.secondary]}

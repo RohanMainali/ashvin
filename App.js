@@ -169,7 +169,7 @@ export default function App() {
       >
         <ActivityIndicator size="large" color={Colors.primary} />
         <Text style={[styles.loadingText, { color: isDarkMode ? Colors.textLight : Colors.textDark }]}>
-          Loading Animus...
+          Loading Ashvin...
         </Text>
       </View>
     )

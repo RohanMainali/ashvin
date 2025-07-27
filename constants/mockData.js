@@ -193,7 +193,7 @@ export const mockChatResponses = {
   "What is a mitral valve?":
     "The mitral valve is one of the four valves in your heart. It's located between the left atrium and the left ventricle. Its primary function is to ensure blood flows in one direction, from the left atrium to the left ventricle, and prevents backflow when the ventricle contracts. Problems with this valve can lead to conditions like mitral regurgitation or stenosis.",
   default:
-    "I am Animus, your AI-powered health assistant. I can help explain medical terms, summarize your results, and offer general lifestyle suggestions. What would you like to know about your health today?",
+    "I am Ashvin, your AI-powered health assistant. I can help explain medical terms, summarize your results, and offer general lifestyle suggestions. What would you like to know about your health today?",
 }
 
 export const mockBadges = [
@@ -221,7 +221,7 @@ export const mockBadges = [
   {
     id: "knowledge_seeker",
     name: "Knowledge Seeker",
-    description: "Asked Animus 10 unique questions!",
+    description: "Asked Ashvin 10 unique questions!",
     icon: "book",
     color: Colors.primary,
   },

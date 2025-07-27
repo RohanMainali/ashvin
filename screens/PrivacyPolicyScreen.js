@@ -31,7 +31,7 @@ const PrivacyPolicyScreen = ({ navigation }) => {
 
         <Text style={[styles.sectionTitle, { color: colors.text, marginTop: 20 }]}>2. How We Use Your Information</Text>
         <Text style={[styles.policyText, { color: colors.text }]}>
-          Your data is used to provide, maintain, and improve the Animus app's features, including heartbeat analysis,
+          Your data is used to provide, maintain, and improve the Ashvin app's features, including heartbeat analysis,
           personalized insights, and reminders. We may use aggregated, anonymized data for research and development
           purposes. We do not sell your personal data to third parties.
         </Text>

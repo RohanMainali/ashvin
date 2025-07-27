@@ -31,7 +31,7 @@ const EditProfileScreen = ({ navigation }) => {
       try {
         const storedName = await AsyncStorage.getItem("userName")
         const storedEmail = await AsyncStorage.getItem("userEmail")
-        setName(storedName || "Animus User")
+        setName(storedName || "Ashvin User")
         setEmail(storedEmail || "user@example.com")
       } catch (e) {
         console.error("Failed to load profile data.", e)

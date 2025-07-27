@@ -96,7 +96,7 @@ const HomeScreen = ({ navigation }) => {
             style={styles.heroIcon}
             accessibilityLabel="Abstract health monitor icon"
           />
-          <Text style={styles.heroTitle}>Welcome to Animus</Text>
+          <Text style={styles.heroTitle}>Welcome to Ashvin</Text>
           <Text style={styles.heroSubtitle}>Your personal AI-powered health companion.</Text>
           {latestScanSummary && (
             <View style={styles.latestSummaryContainer}>
@@ -232,7 +232,7 @@ const HomeScreen = ({ navigation }) => {
         </View>
 
         <View style={{ marginBottom: 8 }}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Explore Animus</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Explore Ashvin</Text>
           <View style={styles.exploreButtonsContainer}>
             <TouchableOpacity
               style={[styles.exploreButton, { backgroundColor: colors.card }]}

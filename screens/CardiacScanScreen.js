@@ -525,7 +525,7 @@ const CardiacScanScreen = ({ navigation, addHistoryEntry, isDarkMode }) => {
                 <Ionicons name="analytics" size={24} color={Colors.textLight} />
               )}
               <Text style={styles.analyzeButtonText}>
-                {isAnalyzing ? "🚀 Turboline AI Analyzing..." : isLoading ? "Processing..." : "🤖 Turboline AI Analysis"}
+                {isAnalyzing ? "🚀 Analyzing..." : isLoading ? "Processing..." : "Analyze"}
               </Text>
             </LinearGradient>
           </TouchableOpacity>

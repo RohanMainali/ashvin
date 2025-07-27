@@ -99,7 +99,7 @@ const SignUpScreen = ({ navigation, setLoggedIn }) => {
           {/* Welcome Section */}
           <View style={styles.welcomeSection}>
             <Text style={styles.title}>Create Account</Text>
-            <Text style={styles.subtitle}>Join Animus and start your health journey</Text>
+            <Text style={styles.subtitle}>Join Ashvin and start your health journey</Text>
           </View>
 
           {/* Sign Up Form */}

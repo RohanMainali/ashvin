@@ -72,7 +72,7 @@ const LoginScreen = ({ navigation, setLoggedIn }) => {
               <Ionicons name="heart" size={40} color="white" />
             </LinearGradient>
           </View>
-          <Text style={styles.appName}>Animus</Text>
+          <Text style={styles.appName}>Ashvin</Text>
           <Text style={styles.tagline}>AI-Powered Health Monitoring</Text>
         </View>
 

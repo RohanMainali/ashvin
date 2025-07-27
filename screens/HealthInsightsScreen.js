@@ -206,7 +206,7 @@ const HealthInsightsScreen = ({ navigation }) => {
 						style={styles.learnMoreGradient}
 					>
 						<Ionicons name="chatbubbles" size={18} color="white" />
-						<Text style={styles.learnMoreText}>Ask Animus</Text>
+						<Text style={styles.learnMoreText}>Ask Ashvin</Text>
 					</LinearGradient>
 				</TouchableOpacity>
 				

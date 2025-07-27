@@ -19,7 +19,7 @@ import {
   Keyboard,
 } from "react-native"
 import { Colors } from "../constants/colors"
-import { chatWithAnimus } from "../utils/chatApi"
+import { chatWithAshvin } from "../utils/chatApi"
 import CustomNavBar from "../components/CustomNavBar"
 
 const { width } = Dimensions.get("window")
@@ -65,7 +65,7 @@ const ChatScreen = ({ route, navigation }) => {
     setMessages([
       {
         id: "1",
-        text: "Hello! I'm Animus, your AI-powered health assistant. I can help you understand your medical results, answer health questions, and provide personalized insights. How can I assist you today?",
+        text: "Hello! I'm Ashvin, your AI-powered health assistant. I can help you understand your medical results, answer health questions, and provide personalized insights. How can I assist you today?",
         sender: "bot",
       },
     ])
@@ -108,7 +108,7 @@ const ChatScreen = ({ route, navigation }) => {
       // and the welcome message (first message)
       const conversationHistory = updatedMessages.slice(1, -1) // Exclude welcome message and current message
       
-      const response = await chatWithAnimus(text, conversationHistory)
+      const response = await chatWithAshvin(text, conversationHistory)
       const botMessage = { id: Date.now().toString() + "_bot", text: response.response, sender: "bot" }
       setMessages((prevMessages) => [...prevMessages, botMessage])
     } catch (error) {
@@ -176,7 +176,7 @@ const ChatScreen = ({ route, navigation }) => {
               <Ionicons name="medical" size={14} color={Colors.primary} />
             </View>
             <ActivityIndicator size="small" color={Colors.primary} />
-            <Text style={[styles.typingText, { color: colors.text }]}>Animus is thinking...</Text>
+            <Text style={[styles.typingText, { color: colors.text }]}>Ashvin is thinking...</Text>
           </View>
         )}
         

@@ -1,9 +1,9 @@
 // Real API call to backend chat endpoint
-export const chatWithAnimus = async (prompt, conversationHistory = []) => {
+export const chatWithAshvin = async (prompt, conversationHistory = []) => {
   try {
     // Convert conversation history to the format expected by the API
     const messages = [
-      { role: 'system', content: 'You are Animus, a helpful AI health assistant. Provide accurate, helpful health information while reminding users to consult healthcare professionals for medical advice.' }
+      { role: 'system', content: 'You are Ashvin, a helpful AI health assistant. Provide accurate, helpful health information while reminding users to consult healthcare professionals for medical advice.' }
     ];
     
     // Add conversation history

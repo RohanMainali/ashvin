@@ -228,7 +228,7 @@ export const symptomCheck = async (symptomsText) => {
   })
 }
 
-export const chatWithAnimus = async (prompt) => {
+export const chatWithAshvin = async (prompt) => {
   return new Promise((resolve) => {
     setTimeout(() => {
       let response = mockChatResponses[prompt] || mockChatResponses["default"]
@@ -248,13 +248,13 @@ export const chatWithAnimus = async (prompt) => {
           "Adequate sleep is crucial for heart health. Aim for 7-9 hours of quality sleep per night. Poor sleep can contribute to high blood pressure, obesity, and diabetes, all risk factors for heart disease."
       } else if (prompt.toLowerCase().includes("symptoms")) {
         response =
-          "If you are experiencing symptoms like chest pain, shortness of breath, dizziness, or irregular heartbeats, please consult a healthcare professional immediately. Animus is a monitoring tool, not a diagnostic one."
+          "If you are experiencing symptoms like chest pain, shortness of breath, dizziness, or irregular heartbeats, please consult a healthcare professional immediately. Ashvin is a monitoring tool, not a diagnostic one."
       } else if (prompt.toLowerCase().includes("skin")) {
         response =
-          "For skin concerns, Animus can help detect common conditions like acne, eczema, or suspicious moles. Remember, it's a screening tool, and a dermatologist should confirm any diagnosis."
+          "For skin concerns, Ashvin can help detect common conditions like acne, eczema, or suspicious moles. Remember, it's a screening tool, and a dermatologist should confirm any diagnosis."
       } else if (prompt.toLowerCase().includes("eye")) {
         response =
-          "Animus can scan your eyes for signs of redness, dryness, or yellowing. These can indicate various conditions, from minor irritation to more serious health issues. Always consult an eye care professional for definitive diagnosis."
+          "Ashvin can scan your eyes for signs of redness, dryness, or yellowing. These can indicate various conditions, from minor irritation to more serious health issues. Always consult an eye care professional for definitive diagnosis."
       } else if (prompt.toLowerCase().includes("vitals")) {
         response =
           "Monitoring vitals like blood pressure, pulse, blood oxygen, and temperature provides a snapshot of your overall health. Consistent abnormal readings should always be discussed with your doctor."

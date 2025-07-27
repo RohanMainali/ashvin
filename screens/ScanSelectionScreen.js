@@ -102,7 +102,7 @@ const ScanSelectionScreen = ({ navigation, addHistoryEntry, isDarkMode }) => {
               <Text style={[styles.infoTitle, { color: colors.text }]}>Important Note</Text>
             </View>
             <Text style={[styles.infoText, { color: colors.text }]}>
-              Animus uses advanced AI to provide health insights. Always consult a medical professional for diagnosis and treatment.
+              Ashvin uses advanced AI to provide health insights. Always consult a medical professional for diagnosis and treatment.
             </Text>
           </Card>
         </View>

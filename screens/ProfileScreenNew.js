@@ -11,7 +11,7 @@ import { getProfile } from "../utils/api"
 
 const ProfileScreen = ({ isDarkMode, toggleTheme, navigation, setLoggedIn }) => {
   const { colors } = useTheme()
-  const [userName, setUserName] = useState("Animus User")
+  const [userName, setUserName] = useState("Ashvin User")
   const [userEmail, setUserEmail] = useState("user@example.com")
   const [scanStreak, setScanStreak] = useState(0)
   const [totalScans, setTotalScans] = useState(0)

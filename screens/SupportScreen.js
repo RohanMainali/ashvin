@@ -37,14 +37,14 @@ const SupportScreen = () => {
         <View style={[styles.faqItem, { borderBottomColor: colors.borderColorLight }]}>
           <Text style={[styles.faqQuestion, { color: colors.text }]}>What do the analysis results mean?</Text>
           <Text style={[styles.faqAnswer, { color: colors.text }]}>
-            The app provides a diagnosis, confidence score, and urgency level. You can also use the "Ask Animus" chat
+            The app provides a diagnosis, confidence score, and urgency level. You can also use the "Ask Ashvin" chat
             for AI-powered explanations of medical terms and lifestyle suggestions.
           </Text>
         </View>
         <View style={styles.faqItem}>
-          <Text style={[styles.faqQuestion, { color: colors.text }]}>Is Animus a substitute for medical advice?</Text>
+          <Text style={[styles.faqQuestion, { color: colors.text }]}>Is Ashvin a substitute for medical advice?</Text>
           <Text style={[styles.faqAnswer, { color: Colors.accentRed, fontWeight: "bold" }]}>
-            No. Animus is a health monitoring tool and should not replace professional medical advice, diagnosis, or
+            No. Ashvin is a health monitoring tool and should not replace professional medical advice, diagnosis, or
             treatment. Always consult with a qualified healthcare provider for any health concerns.
           </Text>
         </View>
@@ -54,7 +54,7 @@ const SupportScreen = () => {
         <Text style={[styles.sectionTitle, { color: colors.text }]}>Contact Us</Text>
         <TouchableOpacity
           style={[styles.contactButton, { backgroundColor: Colors.primary }]}
-          onPress={() => handleLinkPress("mailto:support@animusapp.com")}
+          onPress={() => handleLinkPress("mailto:support@Ashvinapp.com")}
           accessibilityLabel="Email support"
         >
           <Ionicons name="mail-outline" size={24} color={Colors.textLight} />
@@ -70,7 +70,7 @@ const SupportScreen = () => {
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.contactButton, { backgroundColor: Colors.accentGreen }]}
-          onPress={() => handleLinkPress("https://www.animusapp.com/faq")}
+          onPress={() => handleLinkPress("https://www.Ashvinapp.com/faq")}
           accessibilityLabel="Visit FAQ website"
         >
           <Ionicons name="globe-outline" size={24} color={Colors.textLight} />

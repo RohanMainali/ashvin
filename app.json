@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "animusv2",
-    "slug": "animusv2",
+    "name": "Ashvinv2",
+    "slug": "Ashvinv2",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "animusv2",
+    "scheme": "Ashvinv2",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {

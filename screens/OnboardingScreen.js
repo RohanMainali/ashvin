@@ -11,7 +11,7 @@ const { width, height } = Dimensions.get("window")
 const slides = [
   {
     id: "1",
-    title: "Welcome to Animus",
+    title: "Welcome to Ashvin",
     description: "Your AI-powered companion for comprehensive health monitoring and personalized insights.",
     icon: "heart",
     secondaryIcon: "pulse",
@@ -259,7 +259,7 @@ const OnboardingScreen = ({ onComplete }) => {
           >
             <Ionicons name="heart" size={32} color="white" />
           </LinearGradient>
-          <Text style={styles.logoText}>Animus</Text>
+          <Text style={styles.logoText}>Ashvin</Text>
         </View>
         <TouchableOpacity 
           style={styles.skipButton} 
@@ -315,7 +315,7 @@ const OnboardingScreen = ({ onComplete }) => {
           <TouchableOpacity
             style={styles.getStartedButton}
             onPress={goToNext}
-            accessibilityLabel={currentIndex === slides.length - 1 ? "Get Started with Animus" : "Next slide"}
+            accessibilityLabel={currentIndex === slides.length - 1 ? "Get Started with Ashvin" : "Next slide"}
           >
             <LinearGradient
               colors={[Colors.primary, Colors.secondary]}

@@ -17,7 +17,7 @@ const ReportScreen = ({ route, navigation }) => {
   const [recommendationData, setRecommendationData] = useState(null)
   const [recLoading, setRecLoading] = useState(false)
   const [recError, setRecError] = useState(null)
-  const [userName, setUserName] = useState("Animus User")
+  const [userName, setUserName] = useState("Ashvin User")
   const [userEmail, setUserEmail] = useState("user@example.com")
 
   useEffect(() => {
@@ -183,7 +183,7 @@ const ReportScreen = ({ route, navigation }) => {
     console.log("Using state values - userEmail:", userEmail) // Debug log
 
     const pdfContent = `
-      MEDICAL REPORT - Animus Health Monitor
+      MEDICAL REPORT - Ashvin Health Monitor
       Generated: ${new Date().toLocaleString()}
 
       PATIENT INFORMATION
