@@ -46,11 +46,6 @@ This comprehensive platform transforms your device into a **portable diagnostic 
 
 ---
 
-## 📱 Screenshots (Coming Soon)
-*(Add images of your app UI here for visual appeal)*  
-
----
-
 ## 🚀 Getting Started
 Clone the repo:
 ```bash
